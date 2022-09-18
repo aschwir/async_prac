@@ -3,6 +3,31 @@
 const btn = document.querySelector('.btn-country');
 const countriesContainer = document.querySelector('.countries');
 
+
+
+const renderErr = function (msg) {
+    countriesContainer.insertAdjacentText('beforeend', msg);
+    // countriesContainer.style.opacity = 1;
+
+};
+
+
+const renderCountry = function (data, className = '') {
+    const html = `
+        <article class="country ${className}">
+          <img class="country__img" src="${data.flag}" />
+          <div class="country__data">
+            <h3 class="country__name">${data.name}</h3>
+            <h4 class="country__region">${data.region}</h4>
+            <p class="country__row"><span>👫</span>${(+data.population / 1000000).toFixed(1)}</p>
+            <p class="country__row"><span>🗣️</span>${data.languages[0].name}</p>
+            <p class="country__row"><span>💰</span>${data.currencies[0].name}</p>
+          </div>
+        </article>
+        `;
+    countriesContainer.insertAdjacentHTML('beforeend', html);
+    // countriesContainer.style.opacity = 1;
+};
 ///////////////////////////////////////
 
 //old way
@@ -36,22 +61,7 @@ const countriesContainer = document.querySelector('.countries');
 // getCountryData('usa');
 // getCountryData('russia');
 
-const renderCountry = function (data, className = '') {
-    const html = `
-        <article class="country ${className}">
-          <img class="country__img" src="${data.flag}" />
-          <div class="country__data">
-            <h3 class="country__name">${data.name}</h3>
-            <h4 class="country__region">${data.region}</h4>
-            <p class="country__row"><span>👫</span>${(+data.population / 1000000).toFixed(1)}</p>
-            <p class="country__row"><span>🗣️</span>${data.languages[0].name}</p>
-            <p class="country__row"><span>💰</span>${data.currencies[0].name}</p>
-          </div>
-        </article>
-        `;
-    countriesContainer.insertAdjacentHTML('beforeend', html);
-    countriesContainer.style.opacity = 1;
-};
+
 
 // const getCountryAndNeighbor = function (country) {
 //     //ajax call country 1
@@ -96,22 +106,74 @@ const renderCountry = function (data, className = '') {
 // const request = fetch(`https://restcountries.com/v2/name/portugal`);
 // console.log(request);
 
+const getJSON = function (url, errorMessage = 'Something went wrong') {
+    return fetch(url).then(
+        response => {
+            if (!response.ok) throw new Error(`${errorMessage} (${response.status})`);
+
+            return response.json();
+        });
+};
+
+
+// const getCountryData = function (country) {
+//     //country 1
+//     fetch(`https://restcountries.com/v2/name/${country}`)
+//         .then(response => {
+//             console.log(response);
+
+//             if (!response.ok)
+//                 throw new Error(`Country not found ${response.status}`)
+//             return response.json();
+//         })
+//         .then(data => {
+//             renderCountry(data[0]);
+//             const neighbor = data[0].borders?.[0];
+
+//             if (!neighbor) return;
+
+//             //country 2
+//             return fetch(`https://restcountries.com/v2/alpha/${neighbor}`);
+//         })
+//         .then(response => response.json())
+//         .then(data => renderCountry(data, 'neighbor'))
+
+//         .catch(err => {
+//             console.log(`${err} ☻♥♠♦♣◘`);
+//             renderErr(`Something went wrong   ${err.message}. Try again`)
+//         })
+//         .finally(() => {
+//             countriesContainer.style.opacity = 1;
+//         })
+
+// };
+
+
 const getCountryData = function (country) {
     //country 1
-    fetch(`https://restcountries.com/v2/name/${country}`)
-        .then(response => response.json())
+    getJSON(`https://restcountries.com/v2/name/${country}`, 'Country not found.')
+
         .then(data => {
             renderCountry(data[0]);
             const neighbor = data[0].borders?.[0];
 
-            if (!neighbor) return;
+            if (!neighbor) throw new Error('No neighbor found!');
 
             //country 2
-            return fetch(`https://restcountries.com/v2/alpha/${neighbor}`);
+            return getJSON(`https://restcountries.com/v2/alpha/${neighbor}`, 'Country not found.');
         })
-        .then(response => response.json())
-        .then(data => renderCountry(data, 'neighbor'));
+        .then(data => renderCountry(data, 'neighbor'))
+        .catch(err => {
+            console.log(`${err} ☻♥♠♦♣◘`);
+            renderErr(`Something went wrong   ${err.message}. Try again`)
+        })
+        .finally(() => {
+            countriesContainer.style.opacity = 1;
+        })
 
 };
 
-getCountryData('portugal');
+btn.addEventListener('click', function () {
+    getCountryData('portugal');
+})
+
