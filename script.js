@@ -221,11 +221,7 @@
 // lotteryPromise.then(res => console.log(res)).catch(err => console.error(err));
 
 // //promisifying settimeout
-// const wait = function (seconds) {
-//     return new Promise(function (resolve) {
-//         setTimeout(resolve, seconds * 1000)
-//     });
-// };
+
 
 // wait(2).then(() => {
 //     console.log('I waited for 2 seconds');
@@ -235,16 +231,76 @@
 
 
 
-const getPosition = function () {
-    return new Promise(function (resolve, reject) {
-        // navigator.geolocation.getCurrentPosition(
-        //     position => {
-        //         resolve(position),
-        //             err => reject(err);
-        //     });
+// const getPosition = function () {
+//     return new Promise(function (resolve, reject) {
+//         // navigator.geolocation.getCurrentPosition(
+//         //     position => {
+//         //         resolve(position),
+//         //             err => reject(err);
+//         //     });
 
-        navigator.geolocation.getCurrentPosition(resolve, reject);
+//         navigator.geolocation.getCurrentPosition(resolve, reject);
+//     });
+// };
+
+// getPosition().then(pos => console.log(pos));
+
+
+
+const container = document.querySelector('.images');
+
+function createImage(imgPath) {
+    return new Promise((resolve, reject) => {
+        const image = document.createElement('img');;
+        image.src = imgPath;
+
+        image.addEventListener('load', () => {
+            container.append(image);
+            resolve(image)
+        });
+
+        image.addEventListener('error', function () {
+            // console.log('Error');
+            reject('Failed to load image');
+        });
+
     });
 };
 
-getPosition().then(pos => console.log(pos));
+const wait = function (seconds) {
+    return new Promise(function (resolve) {
+        setTimeout(resolve, seconds * 1000)
+    });
+
+};
+
+let currentImg;
+
+createImage('img/img-1.jpg')
+    .then(image => {
+        currentImg = image;
+        console.log('Image 1 loaded');
+        return wait(3);
+    })
+    .then(() => {
+        currentImg.style.display = 'none';
+        return createImage('img/img-2.jpg')
+    })
+    .then(image => {
+        currentImg = image;
+        console.log('Image 2 loaded');
+        return wait(3);
+    })
+    .then(() => {
+        currentImg.style.display = 'none';
+        return createImage('img/img-3.jpg');
+    })
+    .then(image => {
+        currentImg = image;
+        console.log('Image 3 loaded');
+        return wait(3);
+    })
+    .then(() => {
+        currentImg.style.display = 'none';
+    })
+    .catch(err => console.error(err))
